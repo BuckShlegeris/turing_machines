@@ -27,7 +27,7 @@ void go_right () {
 void print_tapes() {
 	printf("tapes: ");
 	int i;
-	for (i = left_tape.size(); i >= 0; --i) {
+	for (i = left_tape.size()-1; i >= 0; i--) {
 		printf("%d ", left_tape[i]);
 	}
 	printf("<| ");
@@ -37,14 +37,11 @@ void print_tapes() {
 	}
 	printf("\n");
 }
+									// newState, newSymbol, newDirection
+char my_rules[NUMBER_OF_STATES][2][3] = { { {1, 1, 0} , {1, 1, 0} },
+											{ {1, 1, 0} , {1, 1, 0} } };
 
-int main() {
-	// left_tape
-									//		 See 0     See 1
-									//     newstate, newsymbol, go right 
-	char rules[NUMBER_OF_STATES][2][3] = { { {1, 1, 1} , {1, 1, 1} },
-											{ {-1, 1, 1} , {-1, 1, 1} } };
-
+int time_run(char rules[NUMBER_OF_STATES][2][3], int maximum_time) {
 	char state = 0;
 	int time = 0;
 	do {
@@ -59,7 +56,20 @@ int main() {
 		state = newState;
 		left_tape[0] = newSymbol;
 		newDirection ? go_right() : go_left();
-	} while (state != -1);
+		if (state == -1) {
+			return time;
+		}
+	} while (time < maximum_time);
+
+	return -1;
+}
+
+int make_rules() {
+
+}
+
+int main() {
+	time_run(my_rules, 10);
 
 	return 0;
 }
