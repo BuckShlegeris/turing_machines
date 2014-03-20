@@ -24,6 +24,11 @@ void go_right () {
 	}
 }
 
+void clear_tapes() {
+	left_tape.clear();
+	right_tape.clear();
+}
+
 void print_tapes() {
 	printf("tapes: ");
 	int i;
@@ -38,17 +43,18 @@ void print_tapes() {
 	printf("\n");
 }
 						// newState, newSymbol, newDirection
-int my_rules[100][2][3];
+int my_rules[MAX_SIZE_OF_RULES][2][3];
 
 int time_run(int rules[][2][3], int maximum_time, bool verbose_mode) {
 	int state = 0;
-	int time = 0;
+	int runtime = 0;
 	do {
-		time++;
+		runtime++;
 		if (verbose_mode) {
-			printf("time is %d, state is %d\n", time, state);
-			printf("currentSymbol is %d\n", left_tape[0]);
-			print_tapes();
+			printf("%d ", runtime);
+			// printf("runtime is %d, state is %d\n", runtime, state);
+			// printf("currentSymbol is %d\n", left_tape[0]);
+			// print_tapes();
 		}
 
 		int currentSymbol = left_tape[left_tape.size()-1];
@@ -60,9 +66,9 @@ int time_run(int rules[][2][3], int maximum_time, bool verbose_mode) {
 		left_tape[left_tape.size()-1] = newSymbol;
 		newDirection ? go_right() : go_left();
 		if (state == -1) {
-			return time;
+			return runtime;
 		}
-	} while (time < maximum_time);
+	} while (runtime < maximum_time);
 
 	return -1;
 }
@@ -87,39 +93,108 @@ void read_rules(int rules[][2][3]) {
 		scanf("%d %d %d %d %d %d", &place[0], &place[1], &place[2], &place[3], &place[4], &place[5]);
 	}
 
-	print_rules(rules, number_of_states);
-};
+	// print_rules(rules, number_of_states);
+}
+
+void generate_rules(int rules[][2][3], int number_of_states) {
+	int i;
+	int* place;
+
+	for(i=0; i<number_of_states*2; i++) {
+		place = (int *) rules[i];
+		place[0] = (rand() % (number_of_states + 1)) - 1;
+		place[1] = rand() % 2;
+		place[2] = rand() % 2;
+		place[3] = (rand() % (number_of_states + 1)) - 1;
+		place[4] = rand() % 2;
+		place[5] = rand() % 2;
+	}
+
+	// print_rules(rules, number_of_states);
+}
 
 void print_rules(int rules[][2][3], int num_of_rules) {
+	printf("\t\t\tSymbol\nState | \t0\t\t\t1\n");
+	printf("      | state  symbol direction | state symbol direction\n");
+	printf("------------------------------------------------------\n");
 	int i;
 	for(i=0; i<num_of_rules; i++) {
 		int *place = (int *) rules[i];
-		printf("%d %d %d %d %d %d\n", place[0], place[1], place[2], place[3], place[4], place[5]);
+		printf("%d:    |\t%d\t%d\t%d\t  %d\t%d\t%d\n", i, place[0], place[1], place[2], place[3], place[4], place[5]);
 	}
 }
 
 
 int main(int argc, char **argv) {
-
-	bool verbose_mode = false;
-
-	// printf("%d\n", argc);
-
-	if (argc == 2) {
-		if (strcmp(argv[1], "-v") == 0) {
-			verbose_mode = true;
-		}
+	if ((argc < 4 || argc > 5) && argc != 2) {
+		printf("Usage: ./tm.cc number_of_trials number_of_states maximum_time\n");
+		printf("./tm.cc --single\n");
+		exit(0);
 	}
 
-	read_rules(my_rules);
+	if (argc ==4 || argc == 5) {
 
-	printf("%d", time_run(my_rules, 10, verbose_mode));
+		int number_of_trials;
+		int number_of_states;
+		int maximum_time;
 
-	return 0;
+		sscanf(argv[1], "%d", &number_of_trials);
+		sscanf(argv[2], "%d", &number_of_states);
+		sscanf(argv[3], "%d", &maximum_time);
+
+		bool verbose_mode = false;
+		bool print_machine = false;
+		if (argc == 5) {
+			if (strcmp(argv[4],"-v") == 0)
+				verbose_mode = true;
+			if (strcmp(argv[4],"-t") == 0)
+				print_machine = true;
+		}
+
+		srand(time(NULL));
+		int i;
+
+		for(i=0; i<number_of_trials; i++) {
+			generate_rules(my_rules, number_of_states);
+			if (print_machine || verbose_mode) {
+				print_rules(my_rules, number_of_states);
+			}
+
+			int num = time_run(my_rules, maximum_time, verbose_mode);
+			if (num != -1 || verbose_mode)
+				printf("%d ", num);
+			if (verbose_mode || print_machine)
+				printf("\n\n");
+		}
+	}
+	else if (argc == 2) {
+		read_rules(my_rules);
+
+		printf("%d", time_run(my_rules, 100, true));
+
+		return 0;
+	}
+
 }
 
 
+	// if (false) {
+	// 	bool verbose_mode = false;
 
+	// 	// printf("%d\n", argc);
+
+	// 	if (argc == 2) {
+	// 		if (strcmp(argv[1], "-v") == 0) {
+	// 			verbose_mode = true;
+	// 		}
+	// 	}
+
+	// 	read_rules(my_rules);
+
+	// 	printf("%d", time_run(my_rules, 100, verbose_mode));
+
+	// 	return 0;
+	// }
 
 // 	int step = 0;
 // //	printf("%d\n", time_run(my_rules, 10));
